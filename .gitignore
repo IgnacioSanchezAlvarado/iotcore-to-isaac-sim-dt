@@ -1,13 +1,20 @@
-# --- Sensitive Configuration ---
-# Contains client IP address and AWS account details
-config.json
+# --- Sensitive / Auto-generated ---
 infra/cdk.context.json
 
 # --- Claude Code Files ---
-# Local Claude assistant configuration and context
 .claude/
 .claudeignore
 CLAUDE.md
+
+# --- Internal Working Files ---
+# Project planning, handoff docs, troubleshooting artifacts
+plans/
+ARCHITECTURE.md
+DEPLOYMENT_FIX.md
+Handoff.md
+project_description.md
+infra/README.md
+*.png
 
 # --- Python ---
 __pycache__/

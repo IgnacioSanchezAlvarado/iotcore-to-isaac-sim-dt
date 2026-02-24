@@ -4,15 +4,35 @@ Real-time digital twin of a LeRobot SO-101 robotic arm using NVIDIA Isaac Sim on
 
 ## Architecture
 
-```
-Physical Robot → Greengrass → IoT Core MQTT (10Hz) → EC2 G6e.4xlarge (L40S GPU)
-                                                      ↓
-                                            MQTT Subscriber → ROS2 Bridge
-                                                      ↓
-                                            Isaac Sim USD Model → NICE DCV → Browser
-```
+```mermaid
+flowchart LR
+    subgraph Edge
+        Robot["SO-101\nRobot Arm"]
+        GG["Greengrass v2\nEdge Component"]
+    end
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for full details.
+    subgraph AWS Cloud
+        IoT["AWS IoT Core\nMQTT Broker"]
+        SM["Secrets Manager\nDCV Password"]
+
+        subgraph EC2["EC2 G6e.4xlarge — NVIDIA L40S GPU"]
+            Sub["MQTT Subscriber\n(Python + SigV4)"]
+            ROS["ROS2 Bridge\n/isaac_joint_command"]
+            Isaac["Isaac Sim\nUSD Scene"]
+            DCV["NICE DCV\nGPU Streaming"]
+        end
+    end
+
+    Browser["Browser"]
+
+    Robot -- "6-DOF Servo\nTelemetry" --> GG
+    GG -- "MQTT/TLS\n10 Hz" --> IoT
+    IoT -- "WebSocket\nSigV4" --> Sub
+    Sub -- "Joint\nRadians" --> ROS
+    ROS -- "JointState\nMsg" --> Isaac
+    Isaac --> DCV
+    DCV -- "Port 8443" --> Browser
+```
 
 ## Prerequisites
 
@@ -23,12 +43,9 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for full details.
 
 ## Setup & Deploy
 
-1. **Configure project settings**:
-   ```bash
-   cp config.example.json config.json
-   # Edit config.json: set ec2.clientIpCidr to your IP (required for DCV access)
-   # Optionally update ec2.amiMapping if using a different AMI
-   ```
+1. **Configure project settings** — edit `config.json`:
+   - Set `ec2.clientIpCidr` to your public IP (required for DCV access)
+   - Optionally update `aws.region` or `ec2.amiMapping` for your region
 
 2. **Deploy infrastructure**:
    ```bash
