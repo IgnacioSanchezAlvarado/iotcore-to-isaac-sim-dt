@@ -22,6 +22,8 @@ flowchart LR
     Isaac --> DCV --> Browser["Browser"]
 ```
 
+See [Telemetry Data Format](docs/telemetry-format.md) for details on the IoT payload structure, joint mapping, and conversion pipeline.
+
 ## Prerequisites
 
 - AWS account with G6e instance quota
