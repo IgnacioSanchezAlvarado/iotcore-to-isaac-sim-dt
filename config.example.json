@@ -1,0 +1,32 @@
+{
+  "project": {
+    "name": "isaac-sim-dt",
+    "environment": "dev"
+  },
+  "aws": {
+    "region": "us-east-1"
+  },
+  "iot": {
+    "deviceId": "arm-001",
+    "topicPrefix": "dt/lerobot",
+    "pollingRateHz": 10
+  },
+  "ec2": {
+    "instanceType": "g6e.4xlarge",
+    "amiMapping": {
+      "eu-north-1": "ami-008f69691c28d9b67",
+      "eu-south-2": "ami-05ff28cc02053a568",
+      "ap-northeast-2": "ami-0aff0d08f1ef5048f",
+      "eu-central-1": "ami-02550de8cd411ced8",
+      "ap-northeast-1": "ami-0fc5724978e744bb6",
+      "us-east-1": "ami-060c4408852b1bd22",
+      "us-east-2": "ami-06ac39229caa361ef",
+      "us-west-2": "ami-06b60fc990ad774c8"
+    },
+    "volumeSizeGb": 768,
+    "clientIpCidr": "YOUR_IP/32"
+  },
+  "dcv": {
+    "port": 8443
+  }
+}

@@ -1,0 +1,5 @@
+awsiotsdk>=1.28.0
+boto3>=1.34.0
+# ROS2 packages (rclpy, sensor_msgs, std_msgs) are installed via apt
+# as part of ros-jazzy-ros-base, not available via pip.
+# See backend/scripts/bootstrap.sh for ROS2 installation.
