@@ -5,33 +5,22 @@ Real-time digital twin of a LeRobot SO-101 robotic arm using NVIDIA Isaac Sim on
 ## Architecture
 
 ```mermaid
-flowchart LR
-    subgraph Edge
-        Robot["SO-101\nRobot Arm"]
-        GG["Greengrass v2\nEdge Component"]
+flowchart TD
+    subgraph Edge["Edge (Physical Robot)"]
+        Robot["SO-101 Robot Arm"] -- "6-DOF Servo Telemetry" --> GG["Greengrass v2"]
     end
 
-    subgraph AWS Cloud
-        IoT["AWS IoT Core\nMQTT Broker"]
-        SM["Secrets Manager\nDCV Password"]
+    Edge -- "MQTT/TLS · 10 Hz" --> IoT["AWS IoT Core"]
 
-        subgraph EC2["EC2 G6e.4xlarge — NVIDIA L40S GPU"]
-            Sub["MQTT Subscriber\n(Python + SigV4)"]
-            ROS["ROS2 Bridge\n/isaac_joint_command"]
-            Isaac["Isaac Sim\nUSD Scene"]
-            DCV["NICE DCV\nGPU Streaming"]
-        end
+    subgraph EC2["EC2 G6e.4xlarge · NVIDIA L40S GPU"]
+        Sub["MQTT Subscriber\n(Python + SigV4)"]
+        Sub -- "Joint Radians" --> ROS["ROS2 Bridge"]
+        ROS -- "JointState Msg" --> Isaac["Isaac Sim · USD Scene"]
+        Isaac --> DCV["NICE DCV · GPU Streaming"]
     end
 
-    Browser["Browser"]
-
-    Robot -- "6-DOF Servo\nTelemetry" --> GG
-    GG -- "MQTT/TLS\n10 Hz" --> IoT
-    IoT -- "WebSocket\nSigV4" --> Sub
-    Sub -- "Joint\nRadians" --> ROS
-    ROS -- "JointState\nMsg" --> Isaac
-    Isaac --> DCV
-    DCV -- "Port 8443" --> Browser
+    IoT -- "WebSocket / SigV4" --> Sub
+    DCV -- "Port 8443" --> Browser["Browser"]
 ```
 
 ## Prerequisites
