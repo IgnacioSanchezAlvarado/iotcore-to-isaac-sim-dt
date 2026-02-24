@@ -5,22 +5,21 @@ Real-time digital twin of a LeRobot SO-101 robotic arm using NVIDIA Isaac Sim on
 ## Architecture
 
 ```mermaid
-flowchart TD
-    subgraph Edge["Edge (Physical Robot)"]
-        Robot["SO-101 Robot Arm"] -- "6-DOF Servo Telemetry" --> GG["Greengrass v2"]
+flowchart LR
+    subgraph Edge
+        Robot["SO-101 Arm"] --> GG["Greengrass"]
     end
 
-    Edge -- "MQTT/TLS · 10 Hz" --> IoT["AWS IoT Core"]
-
-    subgraph EC2["EC2 G6e.4xlarge · NVIDIA L40S GPU"]
-        Sub["MQTT Subscriber\n(Python + SigV4)"]
-        Sub -- "Joint Radians" --> ROS["ROS2 Bridge"]
-        ROS -- "JointState Msg" --> Isaac["Isaac Sim · USD Scene"]
-        Isaac --> DCV["NICE DCV · GPU Streaming"]
+    subgraph AWS
+        IoT["IoT Core"]
+        subgraph EC2["EC2 G6e (L40S GPU)"]
+            Sub["MQTT\nSubscriber"] --> ROS["ROS2\nBridge"] --> Isaac["Isaac Sim"]
+        end
+        DCV["NICE DCV"]
     end
 
-    IoT -- "WebSocket / SigV4" --> Sub
-    DCV -- "Port 8443" --> Browser["Browser"]
+    GG -- MQTT --> IoT --> Sub
+    Isaac --> DCV --> Browser["Browser"]
 ```
 
 ## Prerequisites
