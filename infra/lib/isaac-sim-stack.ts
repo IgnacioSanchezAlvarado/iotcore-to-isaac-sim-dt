@@ -18,7 +18,7 @@ export class IsaacSimDTStack extends cdk.Stack {
 
     // --- VPC: Multiple AZs for GPU capacity flexibility ---
     const vpc = new ec2.Vpc(this, 'Vpc', {
-      maxAzs: 3,
+      maxAzs: 6,
       natGateways: 0,
       subnetConfiguration: [
         {
