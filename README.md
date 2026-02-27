@@ -23,6 +23,7 @@ flowchart LR
 ```
 
 See [Telemetry Data Format](docs/telemetry-format.md) for details on the IoT payload structure, joint mapping, and conversion pipeline.
+See [Troubleshooting](docs/troubleshooting.md) for common issues with bootstrap, DCV, the bridge service, and GPU.
 
 ## Prerequisites
 
@@ -45,7 +46,9 @@ See [Telemetry Data Format](docs/telemetry-format.md) for details on the IoT pay
    npx cdk deploy IsaacSimDTStack
    ```
 
-3. **Get DCV password**:
+3. **Wait for bootstrap to complete** — after deployment, the EC2 instance runs a bootstrap script that installs ROS2, downloads the USD model, configures DCV, and stores the password in Secrets Manager. This takes **3–5 minutes**.
+
+4. **Get DCV password** (once bootstrap finishes):
    ```bash
    aws secretsmanager get-secret-value \
      --secret-id isaac-sim-dt/dcv-password \

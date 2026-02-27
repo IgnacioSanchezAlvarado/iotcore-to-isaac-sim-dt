@@ -70,7 +70,14 @@ DEFAULT_USER=$(getent passwd 1000 | cut -d: -f1 || echo "ubuntu")
 echo "$DEFAULT_USER:$DCV_PASSWORD" | chpasswd
 
 # Store in Secrets Manager (create or update)
-REGION=$(curl -s --max-time 5 http://169.254.169.254/latest/meta-data/placement/region || echo "us-east-1")
+# IMDSv2 requires a token for metadata access
+IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60" --max-time 5 || true)
+REGION=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" \
+    --max-time 5 http://169.254.169.254/latest/meta-data/placement/region || true)
+if [ -z "$REGION" ]; then
+    REGION="us-east-1"
+fi
 aws secretsmanager create-secret \
     --name "isaac-sim-dt/dcv-password" \
     --secret-string "$DCV_PASSWORD" \

@@ -24,7 +24,7 @@
       "us-west-2": "ami-06b60fc990ad774c8"
     },
     "volumeSizeGb": 768,
-    "clientIpCidr": "0.0.0.0/32"
+    "clientIpCidr": "80.103.221.31/32"
   },
   "dcv": {
     "port": 8443
