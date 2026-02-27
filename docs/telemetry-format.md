@@ -13,12 +13,12 @@ The Greengrass edge component publishes JSON to MQTT topic `dt/lerobot/<device-i
   "device_id": "arm-001",
   "timestamp": 1706000000000,
   "joints": {
-    "shoulder_pan":  { "position": 2048, "velocity": 0,  "load": 25, "temp": 34, "current": 175 },
-    "shoulder_lift": { "position": 2248, "velocity": 12, "load": 35, "temp": 36, "current": 205 },
-    "elbow_flex":    { "position": 2298, "velocity": -5, "load": 30, "temp": 35, "current": 190 },
-    "wrist_flex":    { "position": 2048, "velocity": 3,  "load": 15, "temp": 33, "current": 145 },
-    "wrist_roll":    { "position": 2048, "velocity": 0,  "load": 10, "temp": 32, "current": 130 },
-    "gripper":       { "position": 1800, "velocity": 0,  "load": 20, "temp": 33, "current": 160 }
+    "shoulder_pan":  { "position": 2.01,   "velocity": 0.0,  "load": 20.0, "temp": 31, "current": 0 },
+    "shoulder_lift": { "position": -98.89, "velocity": 0.0,  "load": 0.0,  "temp": 29, "current": 0 },
+    "elbow_flex":    { "position": 97.27,  "velocity": 0.0,  "load": 80.0, "temp": 25, "current": 3 },
+    "wrist_flex":    { "position": 63.70,  "velocity": 0.0,  "load": 1080, "temp": 29, "current": 1 },
+    "wrist_roll":    { "position": -3.44,  "velocity": 0.0,  "load": 36.0, "temp": 29, "current": 1 },
+    "gripper":       { "position": 4.83,   "velocity": 0.0,  "load": 1048, "temp": 33, "current": 0 }
   }
 }
 ```
@@ -28,9 +28,9 @@ The Greengrass edge component publishes JSON to MQTT topic `dt/lerobot/<device-i
 - **`device_id`**: Robot identifier (e.g., `"arm-001"`)
 - **`timestamp`**: Unix epoch in milliseconds
 - **`joints`**: Object containing 6 joints, each with:
-  - **`position`**: Servo position in ticks (0–4096 range, 12-bit resolution). 2048 = home/neutral.
-  - **`velocity`**: Servo velocity in ticks/second (signed integer)
-  - **`load`**: Load percentage (0–100)
+  - **`position`**: Joint angle in degrees (float). 0° = home/neutral position. Can be negative.
+  - **`velocity`**: Joint velocity in degrees/second (float, signed)
+  - **`load`**: Raw servo load value
   - **`temp`**: Temperature in Celsius
   - **`current`**: Current draw in mA
 
@@ -51,33 +51,27 @@ The IoT telemetry uses descriptive joint names. Isaac Sim's USD model uses diffe
 
 This mapping is implemented in `backend/joint_converter.py` via the `IOT_TO_USD` dictionary.
 
-## 3. Position Conversion (Ticks to Radians)
+## 3. Position Conversion (Degrees to Radians)
 
-The servos report position as encoder ticks (0–4096 for one full revolution). Isaac Sim expects joint angles in radians with 0 = home position.
+The Greengrass edge component publishes positions in **degrees** (0° = home). The converter auto-detects the format and converts to radians for Isaac Sim.
 
-### Conversion Formula
+### Conversion Formula (degrees)
+
+```
+radians = degrees × (π / 180)
+```
+
+### Legacy Format (ticks)
+
+Older versions of the edge component may publish raw servo ticks (0–4096 integers). The converter auto-detects this and uses:
 
 ```
 radians = (ticks - 2048) × (2π / 4096)
 ```
 
-### Key Points
+Detection logic: if any position value is negative or has a fractional part → degrees. Otherwise → ticks.
 
-- **2048 ticks** (midpoint) → **0 rad** (home/neutral pose)
-- **0 ticks** → **−π rad**
-- **4095 ticks** → **+π rad**
-
-This offset is critical — Isaac Sim's joint zero corresponds to the arm's neutral pose, not the servo's absolute zero.
-
-## 4. Velocity Conversion
-
-Velocity is a rate with no offset needed:
-
-```
-rad/s = ticks_per_second × (2π / 4096)
-```
-
-**Note**: Velocity values are currently published to ROS2 but NOT used by the Isaac Sim ArticulationController — only position commands drive the simulation.
+**Note**: Only position values are sent to the Isaac Sim ArticulationController. Velocity and effort are not used — they conflict with position-based control.
 
 ## 5. Data Pipeline
 

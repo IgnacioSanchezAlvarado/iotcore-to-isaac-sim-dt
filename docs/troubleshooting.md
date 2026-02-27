@@ -120,6 +120,39 @@ sudo apt-get install -y ros-jazzy-ros-base ros-jazzy-sensor-msgs ros-jazzy-std-m
 
 **Fix**: In the Isaac Sim Action Graph editor, disconnect the **Velocity Command** and **Effort Command** inputs on the Articulation Controller node. Only the **Position Command** should be connected. The bridge only sends position data.
 
+### Telemetry position format mismatch (degrees vs ticks)
+
+**Symptom**: Robot moves but joint positions are completely wrong — joints overshoot or barely move.
+
+**Cause**: The Greengrass edge component on the real robot publishes positions in **degrees** (floats, e.g. `-98.89`), but older versions or mock mode use **raw servo ticks** (integers, 0–4096). If the converter assumes the wrong format, the math produces incorrect radians.
+
+**Fix**: The converter (`backend/joint_converter.py`) auto-detects the format:
+- **Degrees**: any position value is negative or has a fractional part
+- **Ticks**: all values are non-negative integers
+
+Check the bridge logs for the detected format:
+```bash
+sudo journalctl -u dt-bridge | grep "Telemetry format detected"
+```
+
+### Gripper head rotated 90° from real robot
+
+**Symptom**: The gripper head (the piece the blades attach to) is vertical in the sim but horizontal on the real robot, or vice versa.
+
+**Cause**: The USD model's Wrist_Roll joint zero doesn't match the physical servo's zero position.
+
+**Fix**: A π/2 (90°) offset is applied to the Wrist_Roll joint in `backend/joint_converter.py` via the `JOINT_OFFSETS` dict. If the orientation is still wrong, adjust the value (try `-math.pi / 2` if it's flipped the wrong way).
+
+### Gripper blades open too wide in simulation
+
+**Symptom**: When the real gripper is fully open, the simulated gripper blades move far beyond the physical limits.
+
+**Cause**: The gripper servo rotation maps to jaw blade angle through a mechanical linkage. The servo's degree range doesn't map 1:1 to the USD model's Jaw joint range.
+
+**Fix**: A scale factor is applied to the Jaw joint in `backend/joint_converter.py` via the `JOINT_SCALES` dict (currently `0.25`). To tune:
+- Blades open too wide → decrease the value (e.g. `0.2`)
+- Blades don't open enough → increase the value (e.g. `0.3`)
+
 ## GPU & Isaac Sim
 
 ### ROS2 bridge fails to load — "Could not import rclpy"

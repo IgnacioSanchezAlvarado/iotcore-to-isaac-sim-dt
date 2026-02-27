@@ -9,6 +9,7 @@ Mock data generates realistic robot arm movements:
 - Velocity correlated with position changes
 - Load varies by joint (higher for shoulder/elbow, lower for wrist/gripper)
 - Realistic amplitude and frequency per joint
+- Positions published in degrees (matching real robot format)
 
 Usage:
     python mock_publisher.py                    # 10Hz, default region
@@ -97,20 +98,20 @@ def generate_payload(t: float, device_id: str = 'arm-001') -> dict:
         if name in _prev_positions:
             # Calculate velocity in ticks per time unit, scaled to reasonable range
             delta = position - _prev_positions[name]
-            velocity = int(delta * 2.0)  # Scale factor for readability
+            velocity_ticks = int(delta * 2.0)  # Scale factor for readability
             # Add small noise
-            velocity += random.randint(-2, 2)
+            velocity_ticks += random.randint(-2, 2)
             # Clamp to servo velocity range
-            velocity = max(-50, min(50, velocity))
+            velocity_ticks = max(-50, min(50, velocity_ticks))
         else:
-            velocity = 0
+            velocity_ticks = 0
 
         _prev_positions[name] = position
 
         # Load - base load per joint + variation based on motion
         base_load = JOINT_LOAD_BASE[name]
         # Load increases with motion magnitude
-        motion_load = int(abs(velocity) * 0.5)
+        motion_load = int(abs(velocity_ticks) * 0.5)
         load = base_load + motion_load + random.randint(-3, 3)
         load = max(0, min(100, load))
 
@@ -124,9 +125,15 @@ def generate_payload(t: float, device_id: str = 'arm-001') -> dict:
         current = current_base + random.randint(-20, 20)
         current = max(50, min(400, current))
 
+        # Convert position and velocity from ticks to degrees
+        # 2048 ticks = 0 degrees (home position)
+        # 4096 ticks = 360 degrees (full rotation)
+        position_deg = (position - 2048) * (360.0 / 4096)
+        velocity_deg = velocity_ticks * (360.0 / 4096)
+
         joints[name] = {
-            'position': position,
-            'velocity': velocity,
+            'position': position_deg,
+            'velocity': velocity_deg,
             'load': load,
             'temp': temp,
             'current': current,
