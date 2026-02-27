@@ -52,17 +52,32 @@ See [Troubleshooting](docs/troubleshooting.md) for common issues with bootstrap,
    ```bash
    aws secretsmanager get-secret-value \
      --secret-id isaac-sim-dt/dcv-password \
-     --query SecretString --output text
+     --query SecretString --output text \
+     --region us-east-1
    ```
 
 ## Test It
 
-### Connect to Isaac Sim
+### Connect via DCV
 
-1. Get DCV URL from stack outputs: `https://<public-dns>:8443`
+1. Get DCV URL from stack outputs: `https://<public-ip>:8443`
 2. Open in browser (Chrome/Edge recommended) or NICE DCV client
-3. Enter DCV password from Secrets Manager
+3. Login with username `ubuntu` and the DCV password from Secrets Manager
 4. Alternative: SSH via Session Manager: `aws ssm start-session --target <instance-id>`
+
+### Launch Isaac Sim and Load the Scene
+
+1. Open a terminal on the DCV desktop
+2. Launch Isaac Sim:
+   ```bash
+   /opt/isaac-sim/isaac-sim.sh
+   ```
+3. Once Isaac Sim is open, load the robot arm scene: **File > Open** and navigate to:
+   ```
+   /opt/digital-twin/assets/SO-ARM101-USD.usd
+   ```
+4. Press the **Play** button (or `Space`) to start the simulation
+5. The robot arm in the scene will now mirror joint positions received from IoT Core
 
 ### Verify the Bridge
 

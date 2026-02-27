@@ -56,8 +56,12 @@ fi
 # --- NICE DCV session ---
 if command -v dcv &>/dev/null; then
     echo "Setting up NICE DCV session..."
-    # Get the default user (ubuntu or ec2-user depending on AMI)
     DEFAULT_USER=$(getent passwd 1000 | cut -d: -f1 || echo "ubuntu")
+
+    # Restart DCV server so it picks up the IMDS license before session creation
+    systemctl restart dcvserver
+    sleep 5
+
     dcv create-session --type=console --owner "$DEFAULT_USER" dt-session 2>/dev/null || {
         echo "DCV session may already exist or DCV not fully configured"
     }
