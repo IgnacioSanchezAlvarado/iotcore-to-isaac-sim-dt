@@ -68,10 +68,12 @@ See [Troubleshooting](docs/troubleshooting.md) for common issues with bootstrap,
 ### Launch Isaac Sim and Load the Scene
 
 1. Open a terminal on the DCV desktop
-2. Launch Isaac Sim:
+2. Launch Isaac Sim (make sure ROS2 env vars are **not** set — Isaac Sim uses its own internal ROS2 libs):
    ```bash
-   /opt/isaac-sim/isaac-sim.sh
+   unset PYTHONPATH ROS_DISTRO AMENT_PREFIX_PATH COLCON_PREFIX_PATH
+   /opt/IsaacSim/isaac-sim.sh
    ```
+   You should see `rclpy loaded` in the terminal output, confirming the ROS2 bridge is active.
 3. Once Isaac Sim is open, load the robot arm scene: **File > Open** and navigate to:
    ```
    /opt/digital-twin/assets/SO-ARM101-USD.usd

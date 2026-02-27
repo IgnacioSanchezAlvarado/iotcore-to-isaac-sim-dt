@@ -46,8 +46,6 @@ class JointStatePublisher(Node):
         self.last_timestamp = ts
 
         positions = latest.get('positions', {})
-        velocities = latest.get('velocities', {})
-        efforts = latest.get('efforts', {})
 
         msg = JointState()
         msg.header = Header()
@@ -56,8 +54,8 @@ class JointStatePublisher(Node):
 
         msg.name = list(JOINT_NAMES)
         msg.position = [positions.get(name, 0.0) for name in JOINT_NAMES]
-        msg.velocity = [velocities.get(name, 0.0) for name in JOINT_NAMES]
-        msg.effort = [efforts.get(name, 0.0) for name in JOINT_NAMES]
+        # Only send positions — velocity and effort commands conflict with
+        # position control and cause physics instability in Isaac Sim.
 
         self.publisher.publish(msg)
         self._publish_count += 1

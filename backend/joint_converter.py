@@ -48,43 +48,18 @@ def ticks_to_radians(ticks: int) -> float:
     return (ticks - HOME_TICKS) * (TWO_PI / TICKS_PER_REV)
 
 
-def velocity_to_radians(ticks: int) -> float:
-    """Convert servo velocity ticks/s to rad/s.
-
-    Velocity is a rate — no home offset subtraction.
-
-    Args:
-        ticks: Servo velocity in ticks/second (signed).
-
-    Returns:
-        float: Velocity in rad/s.
-    """
-    return ticks * (TWO_PI / TICKS_PER_REV)
-
-
 def convert_payload(payload: dict) -> Optional[dict]:
-    """Convert IoT telemetry payload to joint radians.
+    """Convert IoT telemetry payload to joint positions in radians.
 
-    Input: {
-        "joints": {
-            "shoulder_pan": {"position": 2048, "velocity": 0, "load": 12, ...},
-            ...
-        },
-        "timestamp": 1706000000000
-    }
-
-    Output: {
-        "positions": {"shoulder_pan": 3.14159, ...},
-        "velocities": {"shoulder_pan": 0.0, ...},
-        "efforts": {"shoulder_pan": 12.0, ...},
-        "timestamp": 1706000000000
-    }
+    Only extracts positions — velocity and effort are not sent to Isaac Sim
+    as they conflict with position-based articulation control.
 
     Args:
         payload: Raw IoT telemetry payload.
 
     Returns:
-        dict: Converted joint data with positions in radians, or None if malformed.
+        dict with 'positions' (USD joint name -> radians) and 'timestamp',
+        or None if malformed.
     """
     joints = payload.get('joints')
     if not joints:
@@ -92,8 +67,6 @@ def convert_payload(payload: dict) -> Optional[dict]:
 
     result = {
         'positions': {},
-        'velocities': {},
-        'efforts': {},
         'timestamp': payload.get('timestamp', 0),
     }
 
@@ -102,7 +75,5 @@ def convert_payload(payload: dict) -> Optional[dict]:
         if joint is None:
             continue
         result['positions'][usd_name] = ticks_to_radians(joint.get('position', 0))
-        result['velocities'][usd_name] = velocity_to_radians(joint.get('velocity', 0))
-        result['efforts'][usd_name] = float(joint.get('load', 0))
 
     return result

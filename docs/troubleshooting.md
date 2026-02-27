@@ -112,7 +112,27 @@ sudo apt-get install -y ros-jazzy-ros-base ros-jazzy-sensor-msgs ros-jazzy-std-m
   ros2 topic echo /joint_states
   ```
 
+### Robot moves erratically and disappears
+
+**Symptom**: The robot arm jerks around wildly and flies off the scene after a few seconds.
+
+**Cause**: The Articulation Controller node in the USD action graph has **velocity command** and **effort command** inputs connected. When these receive non-zero values alongside position commands, they create conflicting forces that destabilize the physics simulation.
+
+**Fix**: In the Isaac Sim Action Graph editor, disconnect the **Velocity Command** and **Effort Command** inputs on the Articulation Controller node. Only the **Position Command** should be connected. The bridge only sends position data.
+
 ## GPU & Isaac Sim
+
+### ROS2 bridge fails to load — "Could not import rclpy"
+
+Isaac Sim bundles Python 3.11, but system ROS2 Jazzy packages are compiled for Python 3.12. If `ROS_DISTRO` or `PYTHONPATH` is set in your shell (e.g., from sourcing `/opt/ros/jazzy/setup.bash`), Isaac Sim finds the incompatible system rclpy and fails.
+
+**Fix**: Clear ROS2 env vars before launching so Isaac Sim uses its own internal ROS2 libs:
+```bash
+unset PYTHONPATH ROS_DISTRO AMENT_PREFIX_PATH COLCON_PREFIX_PATH
+/opt/IsaacSim/isaac-sim.sh
+```
+
+You should see `rclpy loaded` in the output. The system ROS2 is only needed by the bridge service, which sources it independently.
 
 ### Isaac Sim won't start — GPU not detected
 

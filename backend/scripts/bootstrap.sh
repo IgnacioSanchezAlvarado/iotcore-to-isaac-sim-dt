@@ -19,7 +19,9 @@ if ! command -v ros2 &>/dev/null; then
         > /etc/apt/sources.list.d/ros2.list
     apt-get update -y
     apt-get install -y ros-jazzy-ros-base ros-jazzy-sensor-msgs ros-jazzy-std-msgs
-    echo "source /opt/ros/jazzy/setup.bash" >> /etc/profile.d/ros2.sh
+    # NOTE: Do NOT add ROS2 to the login profile (/etc/profile.d).
+    # It conflicts with Isaac Sim's internal ROS2 libs (Python 3.12 vs 3.11).
+    # The bridge service sources ROS2 independently in its ExecStart.
 else
     echo "ROS2 already installed: $(ros2 --version)"
 fi
